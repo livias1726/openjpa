@@ -84,8 +84,11 @@
     </pluginManagement>
 
     <plugins>
+      <!-- REMOVED TO AVOID TEST RESOURCES DEPENDENCIES (ENHANCE)-->
       <plugin>
+   
           <!-- Use the openjpa maven plugin to enhance the domain model classes -->
+          <!---->
           <groupId>org.apache.openjpa</groupId>
           <artifactId>openjpa-maven-plugin</artifactId>
           <configuration>
@@ -111,6 +114,7 @@
             </dependency>
           </dependencies>
       </plugin>
+     
     </plugins>
   </build>
 </project>

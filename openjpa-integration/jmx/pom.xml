@@ -97,15 +97,20 @@
                 </executions>
             </plugin>
 
+            <!-- REMOVED TO AVOID TEST RESOURCES DEPENDENCIES (ENHANCE)-->
             <plugin>
+            
                 <!-- Use openjpa maven plugin to enhance the domain model classes -->
+                <!---->
                 <groupId>org.apache.openjpa</groupId>
                 <artifactId>openjpa-maven-plugin</artifactId>
                 <configuration>
                     <includes>org/apache/openjpa/integration/jmx/*.class</includes>
                     <addDefaultConstructor>true</addDefaultConstructor>
                     <enforcePropertyRestrictions>true</enforcePropertyRestrictions>
+                    
                     <!-- persistenceXmlFile>${project.basedir}/src/test/resources/META-INF/persistence.xml</persistenceXmlFile-->
+                <!---->
                 </configuration>
                 <executions>
                     <execution>
@@ -124,6 +129,7 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            
             <plugin>
                 <!-- The surefire plugin is used to run the jUnit tests -->
                 <groupId>org.apache.maven.plugins</groupId>
