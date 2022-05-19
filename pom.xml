@@ -192,6 +192,7 @@
         <module>openjpa-tools</module>
         <module>openjpa-features</module>
         <module>openjpa-junit5</module>
+		<module>isw2-tests</module>
     </modules>
 
     <profiles>
