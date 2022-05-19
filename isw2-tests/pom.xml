@@ -72,25 +72,6 @@
     <dependencies>
         <!-- OPENJPA -->
         <dependency>
-            <groupId>org.apache.openjpa</groupId>
-            <artifactId>openjpa-all</artifactId>
-            <version>${project.version}</version>
-            <type>jar</type>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.openjpa</groupId>
-            <artifactId>openjpa-examples</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.openjpa.openjpa-examples</groupId>
-            <artifactId>image-gallery</artifactId>
-            <version>${project.version}</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
             <groupId>org.apache.openjpa.openjpa-examples</groupId>
             <artifactId>openbooks</artifactId>
             <version>${project.version}</version>
@@ -102,139 +83,59 @@
             <version>${project.version}</version>
             <type>jar</type>
         </dependency>
-
-        <dependency>
-            <groupId>org.apache.openjpa</groupId>
-            <artifactId>openjpa-features</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.openjpa</groupId>
-            <artifactId>openjpa-integration</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.openjpa</groupId>
-            <artifactId>openjpa-integration-daytrader</artifactId>
-            <version>${project.version}</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.openjpa</groupId>
-            <artifactId>openjpa-integration-examples</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.openjpa</groupId>
-            <artifactId>openjpa-integration-jmx</artifactId>
-            <version>${project.version}</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.openjpa</groupId>
-            <artifactId>openjpa-integration-slf4j</artifactId>
-            <version>${project.version}</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.openjpa</groupId>
-            <artifactId>openjpa-integration-tck</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.openjpa</groupId>
-            <artifactId>openjpa-integration-validation</artifactId>
-            <version>${project.version}</version>
-            <type>jar</type>
-        </dependency>
-
         <dependency>
             <groupId>org.apache.openjpa</groupId>
             <artifactId>openjpa-jdbc</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
         </dependency>
-
         <dependency>
             <groupId>org.apache.openjpa</groupId>
             <artifactId>openjpa-jest</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
         </dependency>
-
         <dependency>
             <groupId>org.apache.openjpa</groupId>
             <artifactId>openjpa-junit5</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
         </dependency>
-
         <dependency>
             <groupId>org.apache.openjpa</groupId>
             <artifactId>openjpa-kernel</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
         </dependency>
-
         <dependency>
             <groupId>org.apache.openjpa</groupId>
             <artifactId>openjpa-kubernetes</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
         </dependency>
-
         <dependency>
             <groupId>org.apache.openjpa</groupId>
             <artifactId>openjpa-lib</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
         </dependency>
-
         <dependency>
             <groupId>org.apache.openjpa</groupId>
             <artifactId>openjpa-persistence</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
         </dependency>
-
         <dependency>
             <groupId>org.apache.openjpa</groupId>
             <artifactId>openjpa-persistence-jdbc</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
         </dependency>
-
-        <dependency>
-            <groupId>org.apache.openjpa</groupId>
-            <artifactId>openjpa-persistence-locking</artifactId>
-            <version>${project.version}</version>
-            <type>jar</type>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.openjpa</groupId>
-            <artifactId>apache-openjpa</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-        </dependency>
-
         <dependency>
             <groupId>org.apache.openjpa</groupId>
             <artifactId>openjpa-slice</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.openjpa</groupId>
-            <artifactId>openjpa-tools</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
         </dependency>
         <dependency>
             <groupId>org.apache.openjpa</groupId>
@@ -244,17 +145,10 @@
         </dependency>
         <dependency>
             <groupId>org.apache.openjpa</groupId>
-            <artifactId>openjpa-fetch-statistics-was</artifactId>
-            <version>${project.version}</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.openjpa</groupId>
             <artifactId>openjpa-maven-plugin</artifactId>
             <version>${project.version}</version>
             <type>maven-plugin</type>
         </dependency>
-
         <dependency>
             <groupId>org.apache.openjpa</groupId>
             <artifactId>openjpa-xmlstore</artifactId>
