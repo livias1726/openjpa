@@ -19,15 +19,14 @@
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
 
-        <!-- Sonar
-        <sonar.organization>livias1726</sonar.organization>
-        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-        <sonar.coverage.jacoco.xmlReportPaths>isw2-tests/target/coverage-reports/jacoco-reports</sonar.coverage.jacoco.xmlReportPaths>
+        <!--
+        <sonar.coverage.jacoco.xmlReportPaths>${basedir}/../${jacoco.reportDir}</sonar.coverage.jacoco.xmlReportPaths>
         -->
     </properties>
 
     <dependencies>
         <!-- MULTI-MODULE DEPENDENCIES -->
+        <!--
         <dependency>
             <groupId>org.apache.openjpa.openjpa-examples</groupId>
             <artifactId>openbooks</artifactId>
@@ -40,12 +39,13 @@
             <version>${project.version}</version>
             <type>jar</type>
         </dependency>
+        -->
         <dependency>
             <groupId>org.apache.openjpa</groupId>
             <artifactId>openjpa-jdbc</artifactId>
             <version>${project.version}</version>
-            <type>jar</type>
         </dependency>
+        <!--
         <dependency>
             <groupId>org.apache.openjpa</groupId>
             <artifactId>openjpa-jest</artifactId>
@@ -58,12 +58,13 @@
             <version>${project.version}</version>
             <type>jar</type>
         </dependency>
+        -->
         <dependency>
             <groupId>org.apache.openjpa</groupId>
             <artifactId>openjpa-kernel</artifactId>
             <version>${project.version}</version>
-            <type>jar</type>
         </dependency>
+        <!--
         <dependency>
             <groupId>org.apache.openjpa</groupId>
             <artifactId>openjpa-kubernetes</artifactId>
@@ -80,14 +81,14 @@
             <groupId>org.apache.openjpa</groupId>
             <artifactId>openjpa-persistence</artifactId>
             <version>${project.version}</version>
-            <type>jar</type>
         </dependency>
+        -->
         <dependency>
             <groupId>org.apache.openjpa</groupId>
             <artifactId>openjpa-persistence-jdbc</artifactId>
             <version>${project.version}</version>
-            <type>jar</type>
         </dependency>
+        <!--
         <dependency>
             <groupId>org.apache.openjpa</groupId>
             <artifactId>openjpa-slice</artifactId>
@@ -112,22 +113,7 @@
             <version>${project.version}</version>
             <type>jar</type>
         </dependency>
-
-        <!-- OTHERS -->
-        <dependency>
-            <groupId>org.jacoco</groupId>
-            <artifactId>org.jacoco.agent</artifactId>
-            <version>0.8.8</version>
-            <scope>test</scope>
-        </dependency>
-        <!-- BA-DUA
-        <dependency>
-            <groupId>br.usp.each.saeg</groupId>
-            <artifactId>ba-dua-agent</artifactId>
-            <version>0.6.0</version>
-        </dependency>
         -->
-
     </dependencies>
 
     <build>
@@ -135,14 +121,13 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.8</version>
                 <executions>
                     <execution>
-                        <id>report-aggregate</id>
-                        <phase>verify</phase>
+                        <id>report</id>
                         <goals>
                             <goal>report-aggregate</goal>
                         </goals>
+                        <phase>verify</phase>
                         <configuration>
                             <outputDirectory>target/coverage-reports/jacoco-reports</outputDirectory>
                         </configuration>
@@ -152,5 +137,29 @@
         </plugins>
     </build>
 
-
+    <profiles>
+        <profile>
+            <id>isw2-mutation</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-maven</artifactId>
+                        <version>1.8.0</version>
+                        <executions>
+                            <execution>
+                                <id>pit-aggregation</id>
+                                <goals>
+                                    <goal>report-aggregate</goal>
+                                </goals>
+                                <configuration>
+                                    <reportsDirectory>target/coverage-reports/pit-reports</reportsDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

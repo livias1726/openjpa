@@ -106,6 +106,7 @@
             </fileset>
             <config log="${openjpa.Log}" />
         </openjpac>
+
         <!-- Enhance with private persistent properties compatibility option -->
         <openjpac>
             <config propertiesFile="${project.build.testOutputDirectory}/META-INF/nopriv_persistence.xml" />
