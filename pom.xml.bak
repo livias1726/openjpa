@@ -39,25 +39,18 @@
     <version>3.2.3-SNAPSHOT</version>
 
     <properties>
-        <!-- TODO ISW2 -->
-        <!-- Utils -->
-        <coverage.reportDir>../isw2-tests/target/coverage-reports</coverage.reportDir>
-        <!-- Jacoco -->
-        <jacoco.reportDir>${coverage.reportDir}/jacoco-reports</jacoco.reportDir>
-        <!--
+        <!-- ISW2 -->
+        <coverage.report.dir>isw2-tests/target/coverage-reports</coverage.report.dir>
+        <jacoco.report.dir>${coverage.report.dir}/jacoco-report/jacoco.xml</jacoco.report.dir>
         <jacoco.agent>-javaagent:jars/jacoco/jacocoagent.jar</jacoco.agent>
-        -->
-        <!-- Surefire -->
-        <surefire.reportDir>${coverage.reportDir}/surefire-reports</surefire.reportDir>
-        <!--
-        <surefire.jacoco>${jacoco.agent}=destfile=${coverage.reportDir}/jacoco-ut.exec</surefire.jacoco>
-        -->
+        <surefire.reportDir>${coverage.report.dir}/surefire-reports</surefire.reportDir>
+        <surefire.jacoco>${jacoco.agent}=destfile=${project.build.directory}/jacoco-ut.exec</surefire.jacoco>
+
         <!-- Sonar -->
         <sonar.organization>livias1726</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-        <sonar.coverage.jacoco.xmlReportPaths>${jacoco.reportDir}/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.coverage.jacoco.xmlReportPaths>${jacoco.report.dir}/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
         <sonar.junit.reportPaths>${surefire.reportDir}</sonar.junit.reportPaths>
-        <!-- TODO /ISW2 -->
 
         <java.class.version>1.8</java.class.version>
         <java.testclass.version>1.8</java.testclass.version>
@@ -446,7 +439,6 @@
                 <dependency>
                     <groupId>org.apache.derby</groupId>
                     <artifactId>derby</artifactId>
-                    <scope>test</scope>
                 </dependency>
             </dependencies>
             <properties>
@@ -1770,6 +1762,9 @@
         <!-- ISW2 -->
         <profile>
             <id>isw2-coverage</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <build>
                 <plugins>
                     <plugin>
@@ -1778,26 +1773,63 @@
                         <version>0.8.8</version>
                         <executions>
                             <execution>
-                                <id>prepare-agent</id>
+                                <id>prepare-agent-ut</id>
+                                <phase>initialize</phase>
                                 <goals>
                                     <goal>prepare-agent</goal>
                                 </goals>
+                            </execution>
+                            <!-- Integration-tests executed with failsafe-plugin -->
+                            <!--
+                            <execution>
+                                <id>prepare-agent-it</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>prepare-agent-integration</goal>
+                                </goals>
                                 <configuration>
-                                    <destFile>${coverage.reportDir}/jacoco-ut.exec</destFile>
+                                    <append>true</append>
+                                    <destFile>${coverage.reportDir}/jacoco-it.exec</destFile>
                                 </configuration>
+                            </execution>
+                            -->
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>isw2-mutation</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-maven</artifactId>
+                        <version>1.8.0</version>
+                        <configuration>
+                            <outputFormats>
+                                <param>HTML</param>
+                                <param>XML</param>
+                            </outputFormats>
+                            <verbose>true</verbose>
+                            <exportLineCoverage>true</exportLineCoverage>
+                            <timestampedReports>false</timestampedReports>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <!--
+                                  Use an id to disable it in some submodules
+                                -->
+                                <id>pitest-mutation-coverage</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>mutationCoverage</goal>
+                                </goals>
                             </execution>
                         </executions>
                     </plugin>
                 </plugins>
             </build>
-            <dependencies>
-                <dependency>
-                    <groupId>org.mockito</groupId>
-                    <artifactId>mockito-core</artifactId>
-                    <version>3.12.4</version>
-                    <scope>test</scope>
-                </dependency>
-            </dependencies>
         </profile>
     </profiles>
 
@@ -2022,16 +2054,20 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven.surefire.version}</version>
+                    <!--
                     <configuration>
                         <argLine>${surefire.jvm.args}</argLine>
                         <redirectTestOutputToFile>true</redirectTestOutputToFile>
                         <trimStackTrace>false</trimStackTrace>
                         <useSystemClassLoader>true</useSystemClassLoader>
                         <excludes>
+                        -->
                             <!-- exclude classes that include a $; inner classes
                                  are not test cases per OpenJPA standards -->
+                    <!--
                             <exclude>org/apache/openjpa/**/*$*.class</exclude>
                         </excludes>
+                        -->
                     <systemProperties>
                         <property>
                             <name>openjpa.Log</name>

@@ -18,10 +18,6 @@
         <!-- Maven -->
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
-
-        <!--
-        <sonar.coverage.jacoco.xmlReportPaths>${basedir}/../${jacoco.reportDir}</sonar.coverage.jacoco.xmlReportPaths>
-        -->
     </properties>
 
     <dependencies>
@@ -129,7 +125,7 @@
                         </goals>
                         <phase>verify</phase>
                         <configuration>
-                            <outputDirectory>target/coverage-reports/jacoco-reports</outputDirectory>
+                            <outputDirectory>${jacoco.report.dir}</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -137,6 +133,7 @@
         </plugins>
     </build>
 
+    <!--
     <profiles>
         <profile>
             <id>isw2-mutation</id>
@@ -153,7 +150,7 @@
                                     <goal>report-aggregate</goal>
                                 </goals>
                                 <configuration>
-                                    <reportsDirectory>target/coverage-reports/pit-reports</reportsDirectory>
+                                    <reportsDirectory>${pit.report.dir}</reportsDirectory>
                                 </configuration>
                             </execution>
                         </executions>
@@ -162,4 +159,5 @@
             </build>
         </profile>
     </profiles>
+    -->
 </project>

@@ -33,7 +33,7 @@ import static junit.framework.TestCase.fail;
 import static org.mockito.Mockito.*;
 
 @RunWith(Enclosed.class)
-public class TestDBDictionary {
+public class DBDictionaryTest {
 
     /*----------TEST EXAMPLE-----------*/
     @RunWith(Parameterized.class)

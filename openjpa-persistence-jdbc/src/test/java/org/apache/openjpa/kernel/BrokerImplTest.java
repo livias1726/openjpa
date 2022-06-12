@@ -33,7 +33,7 @@ import java.util.*;
 import static junit.framework.TestCase.fail;
 
 @RunWith(Enclosed.class)
-public class TestBrokerImpl {
+public class BrokerImplTest {
 
     @RunWith(Parameterized.class)
     public static class FindAllTest {

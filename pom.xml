@@ -40,23 +40,22 @@
 
     <properties>
         <!-- ISW2 -->
-        <coverage.reportDir>../isw2-tests/target/coverage-reports</coverage.reportDir>
+        <coverage.report.dir>target/isw2-reports</coverage.report.dir>
+        <jacoco.report.dir>${coverage.report.dir}/jacoco-reports</jacoco.report.dir>
+        <surefire.report.dir>${coverage.report.dir}/surefire-reports</surefire.report.dir>
+        <pit.report.dir>${coverage.report.dir}/pit-reports</pit.report.dir>
 
-        <jacoco.reportDir>${coverage.reportDir}/jacoco-reports</jacoco.reportDir>
-        <!--
-        <jacoco.agent>-javaagent:jars/jacoco/jacocoagent.jar</jacoco.agent>
-        -->
+        <badua.report.dir>${coverage.report.dir}/badua-reports</badua.report.dir>
+        <badua.report.dir.win>target\coverage-reports\badua-reports</badua.report.dir.win>
+        <badua.output>target/badua.ser</badua.output>
+        <badua.jar.agent>jars/badua/ba-dua-agent-rt-0.4.1-SNAPSHOT-all.jar</badua.jar.agent>
+        <badua.jar.cli>jars/badua/ba-dua-cli-0.4.1-SNAPSHOT-all.jar</badua.jar.cli>
 
-        <surefire.reportDir>${coverage.reportDir}/surefire-reports</surefire.reportDir>
-        <!--
-        <surefire.jacoco>${jacoco.agent}=destfile=${coverage.reportDir}/jacoco-ut.exec</surefire.jacoco>
-        -->
-        <!-- Sonar
+        <!-- Sonar -->
         <sonar.organization>livias1726</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-        <sonar.coverage.jacoco.xmlReportPaths>${jacoco.reportDir}/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
-        <sonar.junit.reportPaths>${surefire.reportDir}</sonar.junit.reportPaths>
-        -->
+        <sonar.coverage.jacoco.xmlReportPaths>${jacoco.report.dir}/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.junit.reportPaths>${surefire.report.dir}</sonar.junit.reportPaths>
 
         <java.class.version>1.8</java.class.version>
         <java.testclass.version>1.8</java.testclass.version>
@@ -1779,16 +1778,25 @@
                         <version>0.8.8</version>
                         <executions>
                             <execution>
-                                <id>prepare-agent</id>
+                                <id>prepare-agent-ut</id>
                                 <goals>
                                     <goal>prepare-agent</goal>
                                 </goals>
-                                <!--
-                                <configuration>
-                                    <destFile>${coverage.reportDir}/jacoco-ut.exec</destFile>
-                                </configuration>
-                                -->
                             </execution>
+                            <!-- Integration-tests executed with failsafe-plugin -->
+                            <!--
+                            <execution>
+                                <id>prepare-agent-it</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>prepare-agent-integration</goal>
+                                </goals>
+                                <configuration>
+                                    <append>true</append>
+                                    <destFile>${coverage.reportDir}/jacoco-it.exec</destFile>
+                                </configuration>
+                            </execution>
+                            -->
                         </executions>
                     </plugin>
                 </plugins>
@@ -1813,9 +1821,6 @@
                         </configuration>
                         <executions>
                             <execution>
-                                <!--
-                                  Use an id to disable it in some submodules
-                                -->
                                 <id>pitest-mutation-coverage</id>
                                 <phase>test</phase>
                                 <goals>
@@ -2050,14 +2055,21 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven.surefire.version}</version>
+                    <!-- ISW2 -->
+                    <configuration>
+                        <reportsDirectory>${surefire.report.dir}</reportsDirectory>
+                    </configuration>
+                    <!--
                     <configuration>
                         <argLine>${surefire.jvm.args}</argLine>
                         <redirectTestOutputToFile>true</redirectTestOutputToFile>
                         <trimStackTrace>false</trimStackTrace>
                         <useSystemClassLoader>true</useSystemClassLoader>
                         <excludes>
+                        -->
                             <!-- exclude classes that include a $; inner classes
                                  are not test cases per OpenJPA standards -->
+                    <!--
                             <exclude>org/apache/openjpa/**/*$*.class</exclude>
                         </excludes>
                     <systemProperties>
@@ -2115,6 +2127,7 @@
                         </property>
                     </systemProperties>
                     </configuration>
+					-->
                 </plugin>
                 <plugin>
                     <groupId>io.fabric8</groupId>

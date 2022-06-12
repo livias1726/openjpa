@@ -36,14 +36,11 @@
     <description>OpenJPA JDBC</description>
 
     <properties>
-        <target.class.dir>target/classes/org/apache/openjpa/jdbc/sql</target.class.dir>
-        <!--  Ba-Dua  -->
-        <badua.reportDir>${coverage.reportDir}/badua-reports/openjpa.jdbc</badua.reportDir>
-        <badua.agent>-javaagent:jars/badua/ba-dua-agent-rt-0.4.1-SNAPSHOT-all.jar -Doutput.file=${project.build.directory}/badua.ser</badua.agent>
-        <!--
-        <badua.windows.cli> mkdir ..\isw2-tests\target\coverage-reports\badua-reports\openjpa.jdbc | java -jar jars/badua/ba-dua-cli-0.4.1-SNAPSHOT-all.jar report -classes ${target.class.dir} -input ${project.build.directory}/badua.ser -xml ${badua.reportDir}/coverage.xml </badua.windows.cli>
-        <badua.unix.cli> mkdir ../isw2-tests/target/coverage-reports/badua-reports/openjpa.jdbc | java -jar jars/badua/ba-dua-cli-0.4.1-SNAPSHOT-all.jar report -classes ${target.class.dir} -input ${project.build.directory}/badua.ser -xml ${badua.reportDir}/coverage.xml </badua.unix.cli>
-        -->
+        <target.class>target/classes/org/apache/openjpa/jdbc/sql</target.class>
+
+        <badua.agent>-javaagent:${badua.jar.agent} -Doutput.file=${badua.output}</badua.agent>
+        <badua.windows.cli> mkdir ${badua.report.dir.win} | java -jar ${badua.jar.cli} report -classes ${target.class} -input ${badua.output} -xml ${badua.report.dir}/coverage.xml </badua.windows.cli>
+        <badua.unix.cli> mkdir ${badua.report.dir} | java -jar ${badua.jar.cli} report -classes ${target.class} -input ${badua.output} -xml ${badua.report.dir}/coverage.xml </badua.unix.cli>
     </properties>
 
     <dependencies>
@@ -105,7 +102,16 @@
 
     </dependencies>
 
-    <!-- ISW2
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- ISW2 -->
     <profiles>
         <profile>
             <id>isw2-mutation</id>
@@ -120,7 +126,7 @@
                                 <param>org.apache.openjpa.jdbc.sql.DBDictionary</param>
                             </targetClasses>
                             <targetTests>
-                                <param>org.apache.openjpa.jdbc.sql.TestDBDictionary</param>
+                                <param>org.apache.openjpa.jdbc.sql.DBDictionaryTest</param>
                             </targetTests>
                             <avoidCallsTo>
                                 <avoidCallsTo>java.util.logging</avoidCallsTo>
@@ -128,6 +134,7 @@
                                 <avoidCallsTo>org.slf4j</avoidCallsTo>
                                 <avoidCallsTo>org.apache.commons.logging</avoidCallsTo>
                             </avoidCallsTo>
+                            <reportsDirectory>${pit.report.dir}</reportsDirectory>
                         </configuration>
                         <executions>
                             <execution>
@@ -143,6 +150,11 @@
         </profile>
         <profile>
             <id>isw2-dataflow-coverage</id>
+            <activation>
+                <property>
+                    <name>isw2-dataflow-coverage</name>
+                </property>
+            </activation>
             <build>
                 <plugins>
                     <plugin>
@@ -170,6 +182,9 @@
                 <os>
                     <family>Windows</family>
                 </os>
+                <property>
+                    <name>isw2-dataflow-coverage</name>
+                </property>
             </activation>
             <build>
                 <plugins>
@@ -203,6 +218,9 @@
                 <os>
                     <family>unix</family>
                 </os>
+                <property>
+                    <name>isw2-dataflow-coverage</name>
+                </property>
             </activation>
             <build>
                 <plugins>
@@ -231,5 +249,4 @@
             </build>
         </profile>
     </profiles>
-    -->
 </project>
