@@ -36,7 +36,7 @@
     <description>OpenJPA Persistence JDBC</description>
 
     <properties>
-        <target.class>../openjpa-kernel/target/classes/org/apache/openjpa/kernel</target.class>
+        <target.class>target/classes/org/apache/openjpa/kernel</target.class>
 
         <badua.agent>-javaagent:${badua.jar.agent} -Doutput.file=${badua.output}</badua.agent>
         <badua.windows.cli>mkdir ${badua.report.dir.win} | java -jar ${badua.jar.cli} report -classes ${target.class} -input ${badua.output} -xml ${badua.report.dir}/coverage.xml</badua.windows.cli>
@@ -293,6 +293,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <!-- ISW2 -->
+                    <testFailureIgnore>true</testFailureIgnore>
+
                     <argLine>${surefire.jvm.args}</argLine>
                     <excludes>
                         <!-- exclude classes that end with 'Test'; these

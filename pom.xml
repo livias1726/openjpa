@@ -40,22 +40,18 @@
 
     <properties>
         <!-- ISW2 -->
-        <coverage.report.dir>target/isw2-reports</coverage.report.dir>
+        <coverage.report.dir>target/coverage-reports</coverage.report.dir>
         <jacoco.report.dir>${coverage.report.dir}/jacoco-reports</jacoco.report.dir>
+        <!--
         <surefire.report.dir>${coverage.report.dir}/surefire-reports</surefire.report.dir>
+        -->
         <pit.report.dir>${coverage.report.dir}/pit-reports</pit.report.dir>
-
         <badua.report.dir>${coverage.report.dir}/badua-reports</badua.report.dir>
         <badua.report.dir.win>target\coverage-reports\badua-reports</badua.report.dir.win>
         <badua.output>target/badua.ser</badua.output>
         <badua.jar.agent>jars/badua/ba-dua-agent-rt-0.4.1-SNAPSHOT-all.jar</badua.jar.agent>
         <badua.jar.cli>jars/badua/ba-dua-cli-0.4.1-SNAPSHOT-all.jar</badua.jar.cli>
-
-        <!-- Sonar -->
-        <sonar.organization>livias1726</sonar.organization>
-        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-        <sonar.coverage.jacoco.xmlReportPaths>${jacoco.report.dir}/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
-        <sonar.junit.reportPaths>${surefire.report.dir}</sonar.junit.reportPaths>
+        <!-- ISW2 -->
 
         <java.class.version>1.8</java.class.version>
         <java.testclass.version>1.8</java.testclass.version>
@@ -2055,10 +2051,11 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven.surefire.version}</version>
-                    <!-- ISW2 -->
+                    <!-- ISW2
                     <configuration>
                         <reportsDirectory>${surefire.report.dir}</reportsDirectory>
                     </configuration>
+                    -->
                     <!--
                     <configuration>
                         <argLine>${surefire.jvm.args}</argLine>

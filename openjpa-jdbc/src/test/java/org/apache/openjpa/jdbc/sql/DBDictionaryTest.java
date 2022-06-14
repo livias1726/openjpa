@@ -51,12 +51,11 @@ public class DBDictionaryTest {
             Object[][] params = {
                     //basic
                     {null},
-                    //{""},
+                    {""},
                     {"test"},
                     {"tesT"},
                     {"TesT"},
-                    //{"AnoThEr_Test"},
-                    {"\"stringTest\""}
+                    {"AnoThEr_Test"}
             };
 
             return Arrays.asList(params);
@@ -235,8 +234,8 @@ public class DBDictionaryTest {
             Object[][] params = {
                     {"func", null},
                     {null, mock(Val.class)},
-                    //{"", mock(Val.class)},
-                    //{"func", mock(Val.class)}
+                    {"", mock(Val.class)},
+                    {"func", mock(Val.class)}
             };
 
             return Arrays.asList(params);
