@@ -20,7 +20,9 @@ package org.apache.openjpa.jdbc.sql;
 
 import org.apache.openjpa.jdbc.kernel.JDBCStore;
 import org.apache.openjpa.jdbc.kernel.exps.Val;
+import org.apache.openjpa.jdbc.sql.entities.NonSerializableDummy;
 import org.apache.openjpa.kernel.BrokerImpl;
+import org.apache.openjpa.util.StoreException;
 import org.junit.*;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
@@ -153,7 +155,7 @@ public class DBDictionaryTest {
                     {null, mock(JDBCStore.class)},
                     {"VAL", null},
                     {"VAL", mock(JDBCStore.class)},
-                    {"", mock(JDBCStore.class)}
+                    {new NonSerializableDummy("dummy"), mock(JDBCStore.class)}
                     /*
                     {, SQLException.class},
                     {, StoreException.class},
@@ -202,7 +204,7 @@ public class DBDictionaryTest {
                     fail();
                 }
             }else{
-                this.exception = NotSerializableException.class;
+                this.exception = StoreException.class;
             }
         }
 

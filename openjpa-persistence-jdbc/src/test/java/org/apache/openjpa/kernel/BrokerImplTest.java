@@ -193,7 +193,7 @@ public class BrokerImplTest {
 
         private BrokerImpl broker;
 
-        private final Object classes;
+        private final Object tl;
 
         public Boolean expected;
 
@@ -209,7 +209,7 @@ public class BrokerImplTest {
         }
 
         public AddTransactionalListenerTest(Object param){
-            this.classes = param;
+            this.tl = param;
         }
 
         @Before
@@ -223,7 +223,7 @@ public class BrokerImplTest {
         }
 
         private void oracle() {
-            this.expected = (classes == null);
+            this.expected = (tl == null);
         }
 
         @Test
@@ -235,7 +235,7 @@ public class BrokerImplTest {
             Collection<Object> res = broker.getTransactionListeners();
             Assert.assertTrue(res.isEmpty());
 
-            broker.addTransactionListener(classes);
+            broker.addTransactionListener(tl);
 
             res = broker.getTransactionListeners();
             Assert.assertEquals(expected, res.isEmpty());
