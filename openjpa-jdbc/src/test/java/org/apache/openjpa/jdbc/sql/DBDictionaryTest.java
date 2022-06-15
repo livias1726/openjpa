@@ -35,7 +35,6 @@ import static org.mockito.Mockito.*;
 @RunWith(Enclosed.class)
 public class DBDictionaryTest {
 
-    /*----------TEST EXAMPLE-----------*/
     @RunWith(Parameterized.class)
     public static class ToSnakeCaseTest {
 
@@ -77,7 +76,7 @@ public class DBDictionaryTest {
             if(name == null) {
                 this.exception = NullPointerException.class;
 
-            }else if(name.length() == 0){
+            }else if(name.equals("")){
                 this.expected = "";
 
             }else{
@@ -112,18 +111,27 @@ public class DBDictionaryTest {
 
         @Test
         public void testToSnakeCase() {
-            Exception error = null;
+            Assume.assumeNotNull(expected);
 
             try{
                 String value = dbDictionary.toSnakeCase(name);
 
                 Assert.assertEquals(expected, value);
             }catch (Exception e){
-                error = e;
+                fail("Should not throw an exception.");
             }
+        }
 
-            if(error != null){
-                Assert.assertEquals(exception, error.getClass());
+        @Test
+        public void testToSnakeCaseException() {
+            Assume.assumeNotNull(exception);
+
+            try{
+                dbDictionary.toSnakeCase(name);
+
+                fail("Should throw: " + exception);
+            }catch (Exception e){
+                Assert.assertEquals(exception, e.getClass());
             }
         }
     }
@@ -200,7 +208,6 @@ public class DBDictionaryTest {
 
         @Test
         public void testSerialize() {
-            Exception error = null;
 
             try{
                 byte[] serialized = dbDictionary.serialize(val, store);
@@ -208,11 +215,7 @@ public class DBDictionaryTest {
                 Assert.assertArrayEquals(expected, serialized);
 
             }catch(Exception e){
-                error = e;
-            }
-
-            if (error != null) {
-                Assert.assertEquals(this.exception, error.getClass());
+                Assert.assertEquals(exception, e.getClass());
             }
         }
     }
@@ -227,7 +230,9 @@ public class DBDictionaryTest {
 
         private final String func;
         private final Val val;
+
         private String expected;
+        private Class<?> expectedException;
 
         @Parameterized.Parameters
         public static Collection<Object[]> getTestParameters() {
@@ -255,7 +260,7 @@ public class DBDictionaryTest {
 
         private void oracle() {
             if(func == null || val == null){
-                this.expected = null;
+                this.expectedException = NullPointerException.class;
                 return;
             }
 
@@ -264,9 +269,29 @@ public class DBDictionaryTest {
 
         @Test
         public void testAddCastAsType() {
-            String result = dbDictionary.addCastAsType(func,val);
+            Assume.assumeNotNull(expected);
+            try{
+                String result = dbDictionary.addCastAsType(func,val);
+                Assert.assertEquals(expected, result);
 
-            Assert.assertEquals(expected, result);
+            }catch(Exception e){
+                fail("Should not throw an exception.");
+            }
+
+        }
+
+        @Test
+        public void testAddCastAsTypeException() {
+            Assume.assumeNotNull(expectedException);
+
+            try{
+                dbDictionary.addCastAsType(func,val);
+                fail("Should throw: " + expectedException);
+
+            }catch(Exception e){
+                Assert.assertEquals(expectedException, e.getClass());
+            }
+
         }
     }
 
