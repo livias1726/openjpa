@@ -262,6 +262,10 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
+                <configuration>
+                    <destFile>../openjpa-kernel/target/jacoco.exec</destFile>
+                    <excludes>org/apache/openjpa/kernel/BrokerImpl.class</excludes>
+                </configuration>
             </plugin>
             <!-- REMOVED TO AVOID TEST RESOURCES DEPENDENCIES (ANT) -->
             <plugin>
@@ -296,8 +300,10 @@
                     <!-- ISW2 -->
                     <testFailureIgnore>true</testFailureIgnore>
 
+                    <!--
                     <argLine>${surefire.jvm.args}</argLine>
                     <excludes>
+                    -->
                         <!-- exclude classes that end with 'Test'; these
                              are not test cases per OpenJPA standards
                         <exclude>org/apache/openjpa/**/*Test.java</exclude>
@@ -308,13 +314,14 @@
                         <exclude>org/apache/openjpa/**/*$*.class</exclude>
                         -->
 
-                        <!-- exclude "no xsd" test until a workaround is figured out (OPENJPA-513)  -->
-                        <exclude>org/apache/openjpa/persistence/xml/TestPersistenceUnitWithoutXSD.java</exclude>
+                        <!-- exclude "no xsd" test until a workaround is figured out (OPENJPA-513)
+                        <exclude>org/apache/openjpa/persistence/xml/TestPersistenceUnitWithoutXSD.java</exclude> -->
 
-                        <!-- exclude new tests that aren't passing yet -->
+                        <!-- exclude new tests that aren't passing yet
                         <exclude>org/apache/openjpa/persistence/kernel/TestOpenResultsCommit.java</exclude>
                         <exclude>org/apache/openjpa/persistence/query/TestQuotedNumbersInFilters2.java</exclude>
-
+                        -->
+                        <!--
                         <exclude>org/apache/openjpa/persistence/kernel/TestEJBEmbedded.java</exclude>
                         <exclude>org/apache/openjpa/persistence/annotations/TestAdvAnnot.java</exclude>
                         <exclude>org/apache/openjpa/persistence/annotations/TestDDCallbackMethods.java</exclude>
@@ -457,29 +464,32 @@
                         <exclude>org/apache/openjpa/persistence/meta/TestSequenceAssigned.java</exclude>
                         <exclude>org/apache/openjpa/persistence/meta/TestValueStrategies.java</exclude>
                         <exclude>org/apache/openjpa/persistence/meta/TestXMLPersistenceMetaDataSerializer.java</exclude>
-                        <!-- TestPMMemory creates heapdumps etc and there's no real asserts within the test.  -->
+                        -->
+                        <!-- TestPMMemory creates heapdumps etc and there's no real asserts within the test.
                         <exclude>org/apache/openjpa/persistence/kernel/TestPMMemory.java</exclude>
 
                         <exclude>org/apache/openjpa/persistence/meta/TestExternalValues.java</exclude>
+                        -->
+                        <!-- Exclude subclassing tests
+                        <exclude>org/apache/openjpa/**/TestUnenhanced*.java</exclude> -->
 
-                        <!-- Exclude subclassing tests   -->
-                        <exclude>org/apache/openjpa/**/TestUnenhanced*.java</exclude>
-
-                        <!-- Exclude tests that fail due to the dynamic enhancer -->
+                        <!-- Exclude tests that fail due to the dynamic enhancer
                         <exclude>org/apache/openjpa/enhance/TestEnhancementConfiguration.java</exclude>
                         <exclude>org/apache/openjpa/enhance/TestRelationToUnlistedClass.java</exclude>
                         <exclude>org/apache/openjpa/kernel/TestDynamicClassRegistration.java</exclude>
+                        -->
 
-                        <!-- TestEJBTransactionalClass tests nothing -->
-                        <exclude>org/apache/openjpa/persistence/kernel/TestEJBTransactionalClass.java</exclude>
-                        <!-- Exclude JEST tests for now -->
-                        <exclude>org/apache/openjpa/persistence/jest/Test*.java</exclude>
-                        <!-- Exclude TestAudit OPENJPA-2232 -->
-                        <exclude>org/apache/openjpa/audit/TestAudit.java</exclude>
+                        <!-- TestEJBTransactionalClass tests nothing
+                        <exclude>org/apache/openjpa/persistence/kernel/TestEJBTransactionalClass.java</exclude> -->
+                        <!-- Exclude JEST tests for now
+                        <exclude>org/apache/openjpa/persistence/jest/Test*.java</exclude> -->
+                        <!-- Exclude TestAudit OPENJPA-2232
+                        <exclude>org/apache/openjpa/audit/TestAudit.java</exclude> -->
 
-                        <!-- this test fails randomly and noone did fix it since 2010 -->
+                        <!-- this test fails randomly and noone did fix it since 2010
                         <exclude>org/apache/openjpa/persistence/datacache/TestDataCacheBehavesIdentical.java</exclude>
                     </excludes>
+                    -->
                 </configuration>
             </plugin>
         </plugins>

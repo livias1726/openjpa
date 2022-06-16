@@ -84,17 +84,13 @@ public class DBDictionaryTest {
             }else{
                 StringBuilder result = new StringBuilder();
 
-                //first character
-                char c = name.charAt(0);
+                char c = name.charAt(0); //first character
                 result.append(Character.toLowerCase(c));
 
                 char prevCh = c;
-
-                //scan string
-                for (int i = 1; i < name.length(); i++) {
+                for (int i = 1; i < name.length(); i++) { //scan string
 
                     char ch = name.charAt(i);
-
                     if (Character.isUpperCase(ch)) {
                         if(!(prevCh == '_')){
                             result.append('_');
@@ -103,7 +99,6 @@ public class DBDictionaryTest {
                     } else {
                         result.append(ch);
                     }
-
                     prevCh = ch;
                 }
 
