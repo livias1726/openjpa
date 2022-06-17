@@ -43,8 +43,8 @@
         <badua.unix.cli>mkdir ${badua.report.dir} | java -jar ${badua.jar.cli} report -classes ${target.class} -input ${badua.output} -xml ${badua.report.dir}/coverage.xml</badua.unix.cli>
     </properties>
 
+    <!-- ISW2 -->
     <profiles>
-        <!-- ISW2 -->
         <profile>
             <id>isw2-mutation</id>
             <build>
@@ -54,6 +54,7 @@
                         <artifactId>pitest-maven</artifactId>
                         <version>1.8.0</version>
                         <configuration>
+                            <basedir>../openjpa-kernel</basedir>
                             <targetClasses>
                                 <param>org.apache.openjpa.kernel.BrokerImpl</param>
                             </targetClasses>
@@ -264,9 +265,7 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <configuration>
                     <destFile>../openjpa-kernel/target/jacoco.exec</destFile>
-                    <!--
                     <excludes>org/apache/openjpa/kernel/BrokerImpl.class</excludes>
-                    -->
                 </configuration>
             </plugin>
             <!-- REMOVED TO AVOID TEST RESOURCES DEPENDENCIES (ANT) -->

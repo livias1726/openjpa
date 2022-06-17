@@ -1811,7 +1811,6 @@
                                 <param>HTML</param>
                                 <param>XML</param>
                             </outputFormats>
-                            <verbose>true</verbose>
                             <exportLineCoverage>true</exportLineCoverage>
                             <timestampedReports>false</timestampedReports>
                         </configuration>

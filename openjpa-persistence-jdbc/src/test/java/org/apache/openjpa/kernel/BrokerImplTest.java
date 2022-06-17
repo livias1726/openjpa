@@ -21,6 +21,7 @@ package org.apache.openjpa.kernel;
 import org.apache.openjpa.conf.OpenJPAConfiguration;
 import org.apache.openjpa.kernel.entities.DummyEntity;
 import org.apache.openjpa.kernel.entities.DummyFetchConfiguration;
+import org.apache.openjpa.kernel.entities.DummyListener;
 import org.apache.openjpa.persistence.*;
 import org.apache.openjpa.util.*;
 import org.apache.openjpa.util.InvalidStateException;
@@ -51,6 +52,8 @@ public class BrokerImplTest {
         private final boolean validate;
         private final FindCallbacks call;
 
+        private final boolean nonTransRead;
+
         private Object[] expected;
         private Class<?> expectedException;
 
@@ -61,22 +64,31 @@ public class BrokerImplTest {
         public static Collection<Object[]> getTestParameters() {
             Object[][] params = {
                     //base
-                    {null, true, fcb}, //expected NullPointerException
-                    {Collections.EMPTY_LIST, false, fcb}, //expected empty list
-                    {new ArrayList<>(Collections.singleton(null)), false, fcb}, //expected UserException
-                    {new ArrayList<>(Collections.singleton(new IntId(DummyEntity.class, String.valueOf(1)))), true, null},
-                    {new ArrayList<>(Collections.singleton(new IntId(DummyEntity.class, String.valueOf(1)))), false, null},
+                    {null, true, fcb, true}, //expected NullPointerException
+                    {Collections.EMPTY_LIST, false, fcb, true}, //expected empty list
+                    {new ArrayList<>(Collections.singleton(null)), false, fcb, true}, //expected UserException
+                    {new ArrayList<>(Collections.singleton(new IntId(DummyEntity.class, String.valueOf(1)))), true, null, true},
+                    {new ArrayList<>(Collections.singleton(new IntId(DummyEntity.class, String.valueOf(1)))), false, null, true},
                     {new ArrayList<>(Arrays.asList(new IntId(DummyEntity.class, String.valueOf(1)),
-                            new IntId(DummyEntity.class, String.valueOf(2)))), false, null},
+                            new IntId(DummyEntity.class, String.valueOf(2)))), false, null, true},
+
+                    //mutation
+                    {Collections.EMPTY_LIST, false, fcb, false}, //expected empty list
+                    {new ArrayList<>(Collections.singleton(new IntId(DummyEntity.class, String.valueOf(1)))), true, null, false},
+                    {new ArrayList<>(Collections.singleton(new IntId(DummyEntity.class, String.valueOf(1)))), false, null, false},
+                    {new ArrayList<>(Arrays.asList(new IntId(DummyEntity.class, String.valueOf(1)),
+                            new IntId(DummyEntity.class, String.valueOf(2)))), false, null, false},
             };
 
             return Arrays.asList(params);
         }
 
-        public FindAllTest(Collection<IntId> param1, boolean param2, FindCallbacks param3){
+        public FindAllTest(Collection<IntId> param1, boolean param2, FindCallbacks param3, boolean param4){
             this.oids = param1;
             this.validate = param2;
             this.call = param3;
+
+            this.nonTransRead = param4;
         }
 
         @Before
@@ -92,6 +104,8 @@ public class BrokerImplTest {
             if(broker == null){
                 fail("Broker instrumentation failed.");
             }
+
+            broker.setNontransactionalRead(nonTransRead);
 
             oracle();
         }
@@ -141,6 +155,8 @@ public class BrokerImplTest {
             }else if(oids.contains(null) && !validate) {
                 exception = UserException.class;
 
+            }else if(!nonTransRead){
+                exception = InvalidStateException.class;
             }
 
             return exception;
@@ -368,7 +384,7 @@ public class BrokerImplTest {
     }
 
     @RunWith(Parameterized.class)
-    public static class AddTransactionalListenerTest {
+    public static class AddTransactionListenerTest {
 
         private BrokerImpl broker;
 
@@ -381,13 +397,14 @@ public class BrokerImplTest {
             Object[][] params = {
                     {new Class[]{DummyEntity.class}},
                     {new Class[]{}},
-                    {null}
+                    {null},
+                    {new DummyListener(mock(OpenJPAConfiguration.class))}
             };
 
             return Arrays.asList(params);
         }
 
-        public AddTransactionalListenerTest(Object param){
+        public AddTransactionListenerTest(Object param){
             this.tl = param;
         }
 
@@ -397,6 +414,10 @@ public class BrokerImplTest {
                     .cast(Persistence.createEntityManagerFactory("isw2-tests"));
 
             this.broker = (BrokerImpl) JPAFacadeHelper.toBroker(emf.createEntityManager());
+            if(broker == null){
+                fail("Broker instrumentation failed.");
+            }
+
 
             oracle();
         }
@@ -406,11 +427,7 @@ public class BrokerImplTest {
         }
 
         @Test
-        public void testAddTransactionalListener(){
-            if(broker == null){
-                fail("Broker instrumentation failed.");
-            }
-
+        public void testAddTransactionListener(){
             Collection<Object> res = broker.getTransactionListeners();
             Assert.assertTrue(res.isEmpty());
 
@@ -433,6 +450,7 @@ public class BrokerImplTest {
         private final int setFlag;
         private final boolean optOptimistic;
         private final boolean managed;
+        private final boolean close;
 
         private final boolean val;
 
@@ -443,24 +461,29 @@ public class BrokerImplTest {
         public static Collection<Object[]> getTestParameters() {
             Object[][] params = {
                     //base
-                    {true, 0, true, false},
-                    {false, 0, true, false},
+                    {true, 0, true, false, false},
+                    {false, 0, true, false, false},
 
                     //upgrade
-                    {true, 2, true, true}, //InvalidState
-                    {false, 2, true, true}, //InvalidState
-                    {true, 0, false, false}, //Unsupported
+                    {true, 2, true, true, false}, //InvalidState
+                    {false, 2, true, true, false}, //InvalidState
+                    {true, 0, false, false, false}, //Unsupported
+
+                    //mutation
+                    {true, 0, true, false, true},
+                    {false, 0, true, false, true},
             };
 
             return Arrays.asList(params);
         }
 
-        public SetOptimisticTest(boolean param1, int param2, boolean param3, boolean param4){
+        public SetOptimisticTest(boolean param1, int param2, boolean param3, boolean param4, boolean param5){
             this.val = param1;
 
             this.setFlag = param2;
             this.optOptimistic = param3;
             this.managed = param4;
+            this.close = param5;
         }
 
         @Before
@@ -476,8 +499,12 @@ public class BrokerImplTest {
             }
 
             setNewInitialization();
-
             broker.setStatusFlag(setFlag);
+
+            //mutation on assertOpen()
+            if(close){
+                broker.close();
+            }
 
             oracle(true);
         }
@@ -505,21 +532,27 @@ public class BrokerImplTest {
         }
 
         private void oracle(boolean fromSetUp) {
-            setExpectedExceptions();
-
             if(fromSetUp){
+                this.expectedException = setExpectedExceptions();
+
                 this.expected = val;
             }else{
                 this.expected = !val;
             }
         }
 
-        private void setExpectedExceptions() {
-            if(!optOptimistic){
-                this.expectedException = UnsupportedException.class;
+        private Class<?> setExpectedExceptions() {
+            Class<?> exception = null;
+
+            if(broker.isClosed()){
+                exception = InvalidStateException.class;
+            }else if(!optOptimistic){
+                exception = UnsupportedException.class;
             }else if(setFlag == 2){
-                this.expectedException = InvalidStateException.class;
+                exception = InvalidStateException.class;
             }
+
+            return exception;
         }
 
         @Test
@@ -545,6 +578,7 @@ public class BrokerImplTest {
         @Test
         public void testSetOptimisticException(){
             Assume.assumeNotNull(expectedException);
+
             try{
                 broker.setOptimistic(val);
                 fail();
@@ -557,6 +591,10 @@ public class BrokerImplTest {
 
         @After
         public void tearDown(){
+            if(broker.isClosed()){
+                return;
+            }
+
             try{
                 broker.close();
             }catch(InvalidStateException e){

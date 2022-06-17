@@ -33,6 +33,7 @@ import org.junit.runners.Parameterized;
 import org.mockito.verification.VerificationMode;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.sql.Date;
 import java.util.*;
@@ -68,7 +69,11 @@ public class DBDictionaryTest {
                     {"_Test"},
                     {"$dollarTest$"},
                     {"questionTest?"},
-                    {"\"quotedTest\""}
+                    {"\"quotedTest\""},
+
+                    //mutation
+                    {"\"QuotedTest\""}, //is delimited but starts with uppercase
+                    {"bT"}
             };
 
             return Arrays.asList(params);
@@ -93,16 +98,24 @@ public class DBDictionaryTest {
             }else if(name.equals("")){
                 this.expected = "";
 
-            }else{
+            } else{
                 StringBuilder result = new StringBuilder();
 
-                char c = name.charAt(0); //first character
-                result.append(Character.toLowerCase(c));
+                int i = 0;
+                char c = name.charAt(i); //first character
+                System.out.println(name.charAt(i));
+                if(c == dbDictionary.getLeadingDelimiter().charAt(0)){
+                    result.append(c).append(Character.toLowerCase(name.charAt(++i)));
+                    System.out.println(name.charAt(i));
+                }else{
+                    result.append(Character.toLowerCase(c));
+                }
 
-                char prevCh = c;
-                for (int i = 1; i < name.length(); i++) { //scan string
+                char prevCh = name.charAt(i++); //first character
+                System.out.println(prevCh);
+                for (int j = i; j < name.length(); j++) { //scan string
 
-                    char ch = name.charAt(i);
+                    char ch = name.charAt(j);
                     if (Character.isUpperCase(ch)) {
                         if(!(prevCh == '_')){
                             result.append('_');
@@ -162,8 +175,10 @@ public class DBDictionaryTest {
                     {null, mock(JDBCStore.class)},
                     {"VAL", null},
                     {"VAL", mock(JDBCStore.class)},
-                    {new NonSerializableDummy("dummy"), mock(JDBCStore.class)}
+                    {new NonSerializableDummy("dummy"), mock(JDBCStore.class)},
 
+                    //mutation
+                    {new DBDictionary.SerializedData("val".getBytes(StandardCharsets.UTF_8)), mock(JDBCStore.class)}
             };
 
             return Arrays.asList(params);
@@ -205,6 +220,9 @@ public class DBDictionaryTest {
                 }catch(IOException e){
                     fail();
                 }
+            }else if(val instanceof DBDictionary.SerializedData){
+                this.expected = ((DBDictionary.SerializedData) val).bytes;
+
             }else{
                 this.exception = StoreException.class;
             }
@@ -316,6 +334,7 @@ public class DBDictionaryTest {
 
         private DBDictionary dbDictionary;
         private static final PreparedStatement mockStatement = mock(PreparedStatement.class);
+
         private static final int[] types = {JavaTypes.STRING, JavaSQLTypes.SQL_DATE, JavaSQLTypes.TIME,
                 JavaSQLTypes.TIMESTAMP};
 
@@ -354,8 +373,6 @@ public class DBDictionaryTest {
             this.idx = param2;
             this.val = param3;
             this.type = param5;
-
-
             this.col = param4;
 
             this.store = param6;
@@ -364,12 +381,12 @@ public class DBDictionaryTest {
         @Before
         public void setUp() {
             this.dbDictionary = new DBDictionary();
+            dbDictionary.useSetStringForClobs = true; //for mutation
 
             try{
                 setParams();
-            }catch(ClassCastException e){
+            }catch(Exception e) {
                 oracle(e);
-                return;
             }
 
             oracle(null);
@@ -395,6 +412,7 @@ public class DBDictionaryTest {
         }
 
         private void oracle(Exception e) {
+
             if(e != null){
                 this.exception = e.getClass();
                 return;
@@ -422,6 +440,7 @@ public class DBDictionaryTest {
 
             try{
                 dbDictionary.setTyped(stmnt, idx, val, col, type, store);
+
                 verify(mockStatement, expectedVerify.get(type)).setString(idx, valString);
                 verify(mockStatement, expectedVerify.get(type)).setDate(idx, valDate);
                 verify(mockStatement, expectedVerify.get(type)).setTime(idx, valTime);
