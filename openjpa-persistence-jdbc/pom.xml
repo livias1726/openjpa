@@ -264,7 +264,9 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <configuration>
                     <destFile>../openjpa-kernel/target/jacoco.exec</destFile>
+                    <!--
                     <excludes>org/apache/openjpa/kernel/BrokerImpl.class</excludes>
+                    -->
                 </configuration>
             </plugin>
             <!-- REMOVED TO AVOID TEST RESOURCES DEPENDENCIES (ANT) -->

@@ -18,19 +18,24 @@
  */
 package org.apache.openjpa.kernel;
 
+import org.apache.openjpa.conf.OpenJPAConfiguration;
 import org.apache.openjpa.kernel.entities.DummyEntity;
+import org.apache.openjpa.kernel.entities.DummyFetchConfiguration;
 import org.apache.openjpa.persistence.*;
-import org.apache.openjpa.util.IntId;
-import org.apache.openjpa.util.UserException;
+import org.apache.openjpa.util.*;
+import org.apache.openjpa.util.InvalidStateException;
 import org.junit.*;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.Mockito;
 
 import javax.persistence.*;
 import java.util.*;
 
 import static junit.framework.TestCase.fail;
+import static org.apache.openjpa.kernel.StoreContext.*;
+import static org.mockito.Mockito.*;
 
 @RunWith(Enclosed.class)
 public class BrokerImplTest {
@@ -46,22 +51,23 @@ public class BrokerImplTest {
         private final boolean validate;
         private final FindCallbacks call;
 
-        //test
-        private boolean persistFailed;
-
         private Object[] expected;
         private Class<?> expectedException;
 
-        private int expectedId;
-        private String expectedName;
+        private Object[] expectedId;
+        private Object[] expectedName;
 
         @Parameterized.Parameters
         public static Collection<Object[]> getTestParameters() {
             Object[][] params = {
+                    //base
                     {null, true, fcb}, //expected NullPointerException
                     {Collections.EMPTY_LIST, false, fcb}, //expected empty list
                     {new ArrayList<>(Collections.singleton(null)), false, fcb}, //expected UserException
                     {new ArrayList<>(Collections.singleton(new IntId(DummyEntity.class, String.valueOf(1)))), true, null},
+                    {new ArrayList<>(Collections.singleton(new IntId(DummyEntity.class, String.valueOf(1)))), false, null},
+                    {new ArrayList<>(Arrays.asList(new IntId(DummyEntity.class, String.valueOf(1)),
+                            new IntId(DummyEntity.class, String.valueOf(2)))), false, null},
             };
 
             return Arrays.asList(params);
@@ -92,70 +98,77 @@ public class BrokerImplTest {
 
         private void oracle() {
 
-            if(oids == null){
+            if ((this.expectedException = setExpectedException()) != null) {
                 this.expected = null;
-                this.expectedException = NullPointerException.class;
+                return;
+            }
 
-            }else if(oids.isEmpty()){
+            if (oids.isEmpty()) {
                 this.expected = new Object[]{};
-                this.expectedException = null;
+                return;
+            }
 
-            }else if(oids.contains(null)) {
-                this.expected = null;
-                this.expectedException = UserException.class;
+            DummyEntity de;
+            List<Object> listExp = new ArrayList<>();
+            List<Object> listExpId = new ArrayList<>();
+            List<Object> listExpName = new ArrayList<>();
+            for(IntId oid: oids) {
+                if(validate || oid == null){
+                    listExp.add(null);
+                    listExpId.add(null);
+                    listExpName.add(null);
+                }else {
+                    de = new DummyEntity("entity" + oid.getId(), oid.getId());
+                    broker.persist(de, null);
 
-            }else{
-                DummyEntity de = new DummyEntity("entity", 1);
-                broker.persist(de, pcb);
-
-                if(persistFailed){
-                    this.expected = new Object[]{null};
-                }else{
-                    this.expected = new Object[]{de};
-                    this.expectedId = de.getId();
-                    this.expectedName = de.getName();
+                    listExp.add(de);
+                    listExpId.add(de.getId());
+                    listExpName.add(de.getName());
                 }
             }
 
+            this.expected = listExp.toArray();
+            this.expectedId = listExpId.toArray();
+            this.expectedName = listExpName.toArray();
         }
 
-        OpCallbacks pcb = (op, arg, sm) -> {
-            this.persistFailed = sm == null;
+        private Class<?> setExpectedException() {
+            Class<?> exception = null;
 
-            return op;
-        };
+            if(oids == null){
+                exception = NullPointerException.class;
 
-        @Test
-        public void testFindAllWithPersistence(){
-            Assume.assumeFalse(persistFailed || expected != null || expectedException != null);
+            }else if(oids.contains(null) && !validate) {
+                exception = UserException.class;
 
-            Object[] res = broker.findAll(oids, validate, call);
-            Assert.assertNotNull(res);
-            Assert.assertEquals(expected.length, res.length);
-            Assert.assertArrayEquals(expected, res);
+            }
 
-            DummyEntity resEnt = (DummyEntity)res[0];
-            Assert.assertEquals(expectedId, resEnt.getId());
-            Assert.assertEquals(expectedName, resEnt.getName());
+            return exception;
         }
 
         @Test
-        public void testFindAllWithoutPersistence(){
-            Assume.assumeTrue(persistFailed);
+        public void testFindAll(){
+            Assume.assumeTrue(expectedException == null);
 
-            Object[] res = broker.findAll(oids, validate, call);
-            Assert.assertNotNull(res);
-            Assert.assertArrayEquals(expected, res);
-        }
+            try{
+                Object[] res = broker.findAll(oids, validate, call);
+                Assert.assertNotNull(res);
+                Assert.assertEquals(expected.length, res.length);
+                Assert.assertArrayEquals(expected, res);
 
-        @Test
-        public void testFindAllEmpty(){
-            Assume.assumeTrue(expected != null && expected.length == 0);
-            Object[] res = broker.findAll(oids, validate, call);
-            Assert.assertNotNull(res);
+                for(int i=0; i<res.length; i++){
+                    DummyEntity resEnt = (DummyEntity)res[i];
+                    if(resEnt == null){
+                        continue;
+                    }
 
-            Assert.assertEquals(0, res.length);
-            Assert.assertArrayEquals(expected, res);
+                    Assert.assertEquals(expectedId[i], resEnt.getId());
+                    Assert.assertEquals(expectedName[i], resEnt.getName());
+                }
+            }catch(Exception e){
+                fail("Should not throw an exception. " + e.getClass());
+            }
+
         }
 
         @Test
@@ -186,6 +199,172 @@ public class BrokerImplTest {
                 return null;
             }
         };
+    }
+
+    @RunWith(Parameterized.class)
+    public static class FindAll2Test {
+
+        //setup
+        private BrokerImpl broker;
+        private static final int defaultFlags = OID_COPY | OID_ALLOW_NEW | OID_NODELETED;
+        private static final int flagsWithNoValidate = defaultFlags | OID_NOVALIDATE;
+        private static final FetchConfiguration defaultFetch = new DummyFetchConfiguration();
+
+        //params
+        private final Collection<IntId> oids;
+        private FetchConfiguration fetch;
+        private final BitSet exclude;
+        private final Object edata;
+        private final int flags;
+
+        private Object[] expected;
+        private Class<?> expectedException;
+
+        private Object[] expectedId;
+        private Object[] expectedName;
+
+        @Parameterized.Parameters
+        public static Collection<Object[]> getTestParameters() {
+            Object[][] params = {
+                    //replication of FindAllTest
+                    {null, defaultFetch, null, null, flagsWithNoValidate}, //expected NullPointerException
+                    {Collections.EMPTY_LIST, defaultFetch, null, null, defaultFlags}, //expected empty list
+                    {new ArrayList<>(Collections.singleton(null)), defaultFetch, null, null, defaultFlags}, //expected UserException
+                    {new ArrayList<>(Collections.singleton(new IntId(DummyEntity.class, String.valueOf(1)))),
+                            defaultFetch, null, null, flagsWithNoValidate},
+
+                    //new tests
+                    {Collections.EMPTY_LIST, null, null, null, defaultFlags}, //expected empty list
+                    {new ArrayList<>(Collections.singleton(new IntId(DummyEntity.class, String.valueOf(1)))),
+                            defaultFetch, null, null, defaultFlags},
+                    {new ArrayList<>(Collections.singleton(new IntId(DummyEntity.class, String.valueOf(1)))),
+                            defaultFetch, new BitSet(), null, defaultFlags},
+                    {new ArrayList<>(Collections.singleton(new IntId(DummyEntity.class, String.valueOf(1)))),
+                            defaultFetch, EXCLUDE_ALL, null, flagsWithNoValidate},
+                    {new ArrayList<>(Arrays.asList(new IntId(DummyEntity.class, String.valueOf(1)),
+                            new IntId(DummyEntity.class, String.valueOf(2)))), null, null, null, defaultFlags},
+
+            };
+
+            return Arrays.asList(params);
+        }
+
+        public FindAll2Test(Collection<IntId> param1, FetchConfiguration param2, BitSet param3, Object param4, int param5){
+            this.oids = param1;
+            this.fetch = param2;
+            this.exclude = param3;
+            this.edata = param4;
+            this.flags = param5;
+        }
+
+        @Before
+        public void setUp() {
+
+            OpenJPAEntityManagerFactorySPI emf = (OpenJPAEntityManagerFactorySPI)
+                    OpenJPAPersistence.cast(
+                            Persistence.createEntityManagerFactory("isw2-tests"));
+
+            OpenJPAEntityManagerSPI em = emf.createEntityManager();
+
+            this.broker = (BrokerImpl) JPAFacadeHelper.toBroker(em);
+            if(broker == null){
+                fail("Broker instrumentation failed.");
+            }
+
+            if(fetch != null && fetch.equals(defaultFetch)){
+                fetch = broker.getFetchConfiguration();
+            }
+
+            oracle();
+        }
+
+        private void oracle() {
+
+            if((this.expectedException = setExpectedException()) != null){
+                return;
+            }
+
+            DummyEntity de;
+            List<Object> listExp = new ArrayList<>();
+            List<Object> listExpId = new ArrayList<>();
+            List<Object> listExpName = new ArrayList<>();
+            for(IntId oid: oids){
+                if(flags == defaultFlags || oid == null){
+                    listExp.add(null);
+                    listExpId.add(null);
+                    listExpName.add(null);
+
+                }else{
+                    de = new DummyEntity("entity" + oid.getId(), oid.getId());
+
+                    broker.persist(de, null);
+
+                    listExp.add(de);
+                    listExpId.add(de.getId());
+                    listExpName.add(de.getName());
+                }
+            }
+
+            this.expected = listExp.toArray();
+            this.expectedId = listExpId.toArray();
+            this.expectedName = listExpName.toArray();
+        }
+
+        private Class<?> setExpectedException() {
+            Class<?> exception = null;
+
+            if(oids == null){
+                exception = NullPointerException.class;
+
+            }else if(oids.contains(null) && flags == flagsWithNoValidate) {
+
+                exception = UserException.class;
+            }
+
+            return exception;
+        }
+
+        @Test
+        public void testFindAll(){
+            Assume.assumeTrue(expectedException == null);
+
+            try{
+                Object[] res = broker.findAll(oids, fetch, exclude, edata, flags);
+                Assert.assertNotNull(res);
+                Assert.assertEquals(expected.length, res.length);
+                Assert.assertArrayEquals(expected, res);
+
+                for(int i=0; i<res.length; i++){
+                    DummyEntity resEnt = (DummyEntity)res[i];
+                    if(resEnt == null){
+                        continue;
+                    }
+
+                    Assert.assertEquals(expectedId[i], resEnt.getId());
+                    Assert.assertEquals(expectedName[i], resEnt.getName());
+                }
+
+            }catch(Exception e){
+                fail("Should not throw exception.");
+            }
+        }
+
+        @Test
+        public void testFindAllException(){
+            Assume.assumeNotNull(expectedException);
+
+            try{
+                broker.findAll(oids, fetch, exclude, edata, flags);
+                fail("Should have triggered " + expectedException);
+            }catch(Exception e){
+                Assert.assertEquals(expectedException, e.getClass());
+            }
+        }
+
+        @After
+        public void tearDown(){
+            broker.close();
+        }
     }
 
     @RunWith(Parameterized.class)
@@ -251,22 +430,37 @@ public class BrokerImplTest {
     public static class SetOptimisticTest {
 
         private BrokerImpl broker;
+        private final int setFlag;
+        private final boolean optOptimistic;
+        private final boolean managed;
 
         private final boolean val;
+
         private boolean expected;
+        private Class<?> expectedException;
 
         @Parameterized.Parameters
         public static Collection<Object[]> getTestParameters() {
             Object[][] params = {
-                    {true},
-                    {false}
+                    //base
+                    {true, 0, true, false},
+                    {false, 0, true, false},
+
+                    //upgrade
+                    {true, 2, true, true}, //InvalidState
+                    {false, 2, true, true}, //InvalidState
+                    {true, 0, false, false}, //Unsupported
             };
 
             return Arrays.asList(params);
         }
 
-        public SetOptimisticTest(boolean param){
-            this.val = param;
+        public SetOptimisticTest(boolean param1, int param2, boolean param3, boolean param4){
+            this.val = param1;
+
+            this.setFlag = param2;
+            this.optOptimistic = param3;
+            this.managed = param4;
         }
 
         @Before
@@ -277,11 +471,42 @@ public class BrokerImplTest {
                             Persistence.createEntityManagerFactory("isw2-tests"));
 
             this.broker = (BrokerImpl) JPAFacadeHelper.toBroker(emf.createEntityManager());
+            if(broker == null){
+                fail("Failed to initialize broker.");
+            }
+
+            setNewInitialization();
+
+            broker.setStatusFlag(setFlag);
 
             oracle(true);
         }
 
+        private void setNewInitialization() {
+            Collection<String> supportedOptions = broker.getConfiguration().supportedOptions();
+            if(!optOptimistic){
+                supportedOptions.remove(OpenJPAConfiguration.OPTION_OPTIMISTIC);
+            }else{
+                if(!supportedOptions.contains(OpenJPAConfiguration.OPTION_OPTIMISTIC)){
+                    supportedOptions.add(OpenJPAConfiguration.OPTION_OPTIMISTIC);
+                }
+            }
+
+            OpenJPAConfiguration conf = Mockito.mock(OpenJPAConfiguration.class);
+            when(conf.supportedOptions()).thenReturn(supportedOptions);
+
+            AbstractBrokerFactory fact = Mockito.mock(AbstractBrokerFactory.class);
+            when(fact.getConfiguration()).thenReturn(conf);
+
+            DelegatingStoreManager sm = broker.getStoreManager();
+
+            //overriding factory initialization
+            broker.initialize(fact, sm, managed, ConnectionRetainModes.CONN_RETAIN_TRANS, true);
+        }
+
         private void oracle(boolean fromSetUp) {
+            setExpectedExceptions();
+
             if(fromSetUp){
                 this.expected = val;
             }else{
@@ -289,25 +514,56 @@ public class BrokerImplTest {
             }
         }
 
+        private void setExpectedExceptions() {
+            if(!optOptimistic){
+                this.expectedException = UnsupportedException.class;
+            }else if(setFlag == 2){
+                this.expectedException = InvalidStateException.class;
+            }
+        }
+
         @Test
         public void testSetOptimistic(){
-            if(broker == null){
-                fail("Failed to initialize broker.");
-            }
+            Assume.assumeTrue(expectedException == null);
 
-            if(broker.getOptimistic() == val){
-                broker.setOptimistic(!val);
-                oracle(false);
-            }else{
+            try{
+                if(broker.getOptimistic() == val){
+                    broker.setOptimistic(!val);
+                    oracle(false);
+                }else{
+                    broker.setOptimistic(val);
+                }
+
+                Assert.assertEquals(expected, broker.getOptimistic());
+
+            }catch(Exception e){
+
+                fail();
+            }
+        }
+
+        @Test
+        public void testSetOptimisticException(){
+            Assume.assumeNotNull(expectedException);
+            try{
                 broker.setOptimistic(val);
-            }
+                fail();
 
-            Assert.assertEquals(expected, broker.getOptimistic());
+            }catch(Exception e){
+
+                Assert.assertEquals(expectedException, e.getClass());
+            }
         }
 
         @After
         public void tearDown(){
-            broker.close();
+            try{
+                broker.close();
+            }catch(InvalidStateException e){
+                broker.setStatusFlag(0);
+                broker.close();
+            }
+
         }
     }
 

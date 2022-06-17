@@ -20,15 +20,21 @@ package org.apache.openjpa.jdbc.sql;
 
 import org.apache.openjpa.jdbc.kernel.JDBCStore;
 import org.apache.openjpa.jdbc.kernel.exps.Val;
+import org.apache.openjpa.jdbc.meta.JavaSQLTypes;
+import org.apache.openjpa.jdbc.schema.Column;
 import org.apache.openjpa.jdbc.sql.entities.NonSerializableDummy;
 import org.apache.openjpa.kernel.BrokerImpl;
+import org.apache.openjpa.meta.JavaTypes;
 import org.apache.openjpa.util.StoreException;
 import org.junit.*;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.verification.VerificationMode;
 
 import java.io.*;
+import java.sql.*;
+import java.sql.Date;
 import java.util.*;
 
 import static junit.framework.TestCase.fail;
@@ -56,7 +62,13 @@ public class DBDictionaryTest {
                     {"test"},
                     {"tesT"},
                     {"TesT"},
-                    {"AnoThEr_Test"}
+                    {"AnoThEr_Test"},
+                    //new
+                    {"_test"},
+                    {"_Test"},
+                    {"$dollarTest$"},
+                    {"questionTest?"},
+                    {"\"quotedTest\""}
             };
 
             return Arrays.asList(params);
@@ -151,11 +163,6 @@ public class DBDictionaryTest {
                     {"VAL", null},
                     {"VAL", mock(JDBCStore.class)},
                     {new NonSerializableDummy("dummy"), mock(JDBCStore.class)}
-                    /*
-                    {, SQLException.class},
-                    {, StoreException.class},
-                    {, NotSerializableException.class}
-                     */
 
             };
 
@@ -289,6 +296,152 @@ public class DBDictionaryTest {
                 Assert.assertEquals(expectedException, e.getClass());
             }
 
+        }
+    }
+
+    /*
+    * Set a column value into a prepared statement.
+        Parameters:
+            stmnt - the prepared statement to parameterize
+            idx - the index of the parameter in the prepared statement
+            val - the value of the column
+            col - the column being set
+            type - the field mapping type code for the value
+            store - the store manager for the current context
+        Throws:
+            SQLException
+    * */
+    @RunWith(Parameterized.class)
+    public static class SetTypedTest {
+
+        private DBDictionary dbDictionary;
+        private static final PreparedStatement mockStatement = mock(PreparedStatement.class);
+        private static final int[] types = {JavaTypes.STRING, JavaSQLTypes.SQL_DATE, JavaSQLTypes.TIME,
+                JavaSQLTypes.TIMESTAMP};
+
+        private final PreparedStatement stmnt;
+        private final int idx;
+
+        private final Object val;
+        private String valString;
+        private Date valDate;
+        private Time valTime;
+        private Timestamp valTimestamp;
+
+        private final Column col;
+        private final int type;
+        private final JDBCStore store;
+
+        private Map<Integer, VerificationMode> expectedVerify;
+        private Class<?> exception;
+
+        @Parameterized.Parameters
+        public static Collection<Object[]> getTestParameters() {
+            Object[][] params = {
+                    {null, 0, null, null, -1, null}, //null pointer
+                    {mockStatement, 1, "val", null, types[0], null}, //string
+                    {mockStatement, 2, new Date(System.currentTimeMillis()), new Column(), types[1], null},
+                    {mockStatement, -1, new Time(System.currentTimeMillis()), new Column(), types[2], null},
+                    {mockStatement, -2, new Timestamp(System.currentTimeMillis()), new Column(), types[3], null},
+                    {mockStatement, 10, "val", null, types[2], mock(JDBCStore.class)}, //class cast
+            };
+
+            return Arrays.asList(params);
+        }
+
+        public SetTypedTest(PreparedStatement param1, int param2, Object param3, Column param4, int param5, JDBCStore param6) {
+            this.stmnt = param1;
+            this.idx = param2;
+            this.val = param3;
+            this.type = param5;
+
+
+            this.col = param4;
+
+            this.store = param6;
+        }
+
+        @Before
+        public void setUp() {
+            this.dbDictionary = new DBDictionary();
+
+            try{
+                setParams();
+            }catch(ClassCastException e){
+                oracle(e);
+                return;
+            }
+
+            oracle(null);
+        }
+
+        private void setParams() throws ClassCastException{
+            switch(type){
+                case JavaTypes.STRING:
+                    valString = (String) val;
+                    break;
+                case JavaSQLTypes.SQL_DATE:
+                    valDate = (Date) val;
+                    break;
+                case JavaSQLTypes.TIME:
+                    valTime = (Time) val;
+                    break;
+                case JavaSQLTypes.TIMESTAMP:
+                    valTimestamp = (Timestamp) val;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void oracle(Exception e) {
+            if(e != null){
+                this.exception = e.getClass();
+                return;
+            }
+
+            if(stmnt == null){
+                this.exception = NullPointerException.class;
+                return;
+            }
+
+            expectedVerify = new HashMap<>();
+            for(int type: types){
+                if(type == this.type){
+                    expectedVerify.put(type, atMostOnce());
+                }else{
+                    expectedVerify.put(type, never());
+                }
+            }
+
+        }
+
+        @Test
+        public void testSetTyped() {
+            Assume.assumeTrue(exception == null);
+
+            try{
+                dbDictionary.setTyped(stmnt, idx, val, col, type, store);
+                verify(mockStatement, expectedVerify.get(type)).setString(idx, valString);
+                verify(mockStatement, expectedVerify.get(type)).setDate(idx, valDate);
+                verify(mockStatement, expectedVerify.get(type)).setTime(idx, valTime);
+                verify(mockStatement, expectedVerify.get(type)).setTimestamp(idx, valTimestamp);
+
+            }catch (Exception e){
+                fail("Should not throw " + e.getClass());
+            }
+        }
+
+        @Test
+        public void testSetTypedException() {
+            Assume.assumeNotNull(exception);
+
+            try{
+                dbDictionary.setTyped(stmnt, idx, val, col, type, store);
+                fail("Should throw " + exception);
+            }catch (Exception e){
+                Assert.assertEquals(exception, e.getClass());
+            }
         }
     }
 
